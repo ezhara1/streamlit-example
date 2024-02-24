@@ -3,6 +3,7 @@ from datetime import date
 from thetadata import ThetaClient, OptionReqType, OptionRight, DateRange, SecType, DataType
 import pandas as pd
 import yfinance as yf
+from thetadata.exceptions import NoDataException
 import plotly.graph_objects as go  # For scatter and candlestick charts
 
 # Initialize the ThetaClient (assuming it doesn't require authentication for simplicity)
@@ -50,30 +51,41 @@ end_date = st.sidebar.date_input("End Date", date.today())
 display_mode = st.sidebar.radio("Display Mode", ['Chart', 'Table'])
 
 # Fetch Historical Option Data for primary expiration
-with client.connect():
-    data_details = client.get_hist_option(
-        req=OptionReqType.EOD,
-        root=symbol,
-        exp=expiration,
-        strike=strike,
-        right=OptionRight.CALL,
-        date_range=DateRange(start_date, end_date)
-    )
+try:
+    with client.connect():
+        data_details = client.get_hist_option(
+            req=OptionReqType.EOD,
+            root=symbol,
+            exp=expiration,
+            strike=strike,
+            right=OptionRight.CALL,
+            date_range=DateRange(start_date, end_date)
+        )
+except NoDataException:
+    st.write("No data available for the selected options.")
+    data_details = None
+
+
 data_details['Expiration'] = pd.to_datetime(expiration)
 data_details['Expiration'] = data_details['Expiration'].dt.strftime('%Y-%m-%d')  # Formatting the expiration date
 
 # Fetch for secondary expiration if selected
 secondary_data_details = None
 if secondary_expiration:
-    with client.connect():
-        secondary_data_details = client.get_hist_option(
-            req=OptionReqType.EOD,
-            root=symbol,
-            exp=secondary_expiration,
-            strike=strike,
-            right=OptionRight.CALL,
-            date_range=DateRange(start_date, end_date)
-        )
+    try:
+        with client.connect():
+            secondary_data_details = client.get_hist_option(
+                req=OptionReqType.EOD,
+                root=symbol,
+                exp=secondary_expiration,
+                strike=strike,
+                right=OptionRight.CALL,
+                date_range=DateRange(start_date, end_date)
+            )
+    except NoDataException:
+        st.write("No data available for the selected options.")
+        secondary_data_details = None
+        
     secondary_data_details['Expiration'] = pd.to_datetime(secondary_expiration)
     secondary_data_details['Expiration'] = secondary_data_details['Expiration'].dt.strftime('%Y-%m-%d')  # Formatting the expiration date
 
