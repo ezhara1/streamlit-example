@@ -1,9 +1,8 @@
 import streamlit as st
 from datetime import date
-from thetadata import ThetaClient, OptionReqType, OptionRight, DateRange, SecType, DataType
+from thetadata import ThetaClient, OptionReqType, OptionRight, DateRange, SecType, DataType, NoData
 import pandas as pd
 import yfinance as yf
-from thetadata.exceptions import NoDataException
 import plotly.graph_objects as go  # For scatter and candlestick charts
 
 # Initialize the ThetaClient (assuming it doesn't require authentication for simplicity)
@@ -61,13 +60,15 @@ try:
             right=OptionRight.CALL,
             date_range=DateRange(start_date, end_date)
         )
-except NoDataException:
+except NoData:
     st.write("No data available for the selected options.")
     data_details = None
+    expiration = None
 
 
-data_details['Expiration'] = pd.to_datetime(expiration)
-data_details['Expiration'] = data_details['Expiration'].dt.strftime('%Y-%m-%d')  # Formatting the expiration date
+if expiration is not None:
+    data_details['Expiration'] = pd.to_datetime(expiration)
+    data_details['Expiration'] = data_details['Expiration'].dt.strftime('%Y-%m-%d')  # Formatting the expiration date
 
 # Fetch for secondary expiration if selected
 secondary_data_details = None
@@ -82,10 +83,12 @@ if secondary_expiration:
                 right=OptionRight.CALL,
                 date_range=DateRange(start_date, end_date)
             )
-    except NoDataException:
+    except NoData:
         st.write("No data available for the selected options.")
         secondary_data_details = None
-        
+        secondary_expiration = None
+
+if secondary_expiration is not None:
     secondary_data_details['Expiration'] = pd.to_datetime(secondary_expiration)
     secondary_data_details['Expiration'] = secondary_data_details['Expiration'].dt.strftime('%Y-%m-%d')  # Formatting the expiration date
 
