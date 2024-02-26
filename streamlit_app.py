@@ -12,6 +12,14 @@ client = ThetaClient()
 def set_chart_type(chart_type):
     st.session_state.chart_data_type = chart_type
 
+# Check if the chart_data_type key exists in session_state, if not, initialize it for both stock and option charts
+if 'chart_data_type_stock' not in st.session_state:
+    st.session_state['chart_data_type_stock'] = 'Line'  # Default chart type for stock
+if 'chart_data_type_option' not in st.session_state:
+    st.session_state['chart_data_type_option'] = 'Line'  # Default chart type for options
+
+
+
 # Check if the chart_data_type key exists in session_state, if not, initialize it
 if 'chart_data_type' not in st.session_state:
     st.session_state['chart_data_type'] = 'Price'
@@ -21,8 +29,7 @@ with client.connect():
     symbols = client.get_roots(SecType.OPTION)
 symbol = st.sidebar.selectbox("Select Symbol", symbols)
 
-# Sidebar: Chart Type Selection
-chart_type = st.sidebar.selectbox("Select Chart Type", ["Line", "Scatter", "Candlestick"])
+
 
 # Sidebar: Expiration Date Selection based on selected Symbol
 with client.connect():
@@ -108,16 +115,39 @@ else:
 
 st.write(f"Symbol: {symbol} - {stock_name} - Latest Price: {latest_price:.2f}")
 
+
+st.write("Stock Price Chart")
+
+button_col1, button_col2, button_col3 = st.columns(3)
+
+with button_col1:
+    if st.button('Line', key='line_stock'):
+        st.session_state.chart_data_type_stock = 'Line'
+
+with button_col2:
+    if st.button('Scatter', key='scatter_stock'):
+        st.session_state.chart_data_type_stock = 'Scatter'
+
+with button_col3:
+    if st.button('Candlestick', key='candlestick_stock'):
+        st.session_state.chart_data_type_stock = 'Candlestick'
+
+
+chart_type_stock = st.session_state.chart_data_type_stock
+# Logic to display the selected chart type for stock data
+# (Similar to the previous snippet but using chart_type_stock variable)
+
+
 # Display the stock price chart based on selected chart type
-if chart_type == "Line":
+if chart_type_stock == "Line":
     st.line_chart(stock_quote.set_index('Date')['Close'])
-elif chart_type == "Scatter":
+elif chart_type_stock == "Scatter":
     fig_scatter = go.Figure(data=[go.Scatter(x=stock_quote['Date'], y=stock_quote['Close'], mode='markers')])
     st.plotly_chart(fig_scatter)
-elif chart_type == "Candlestick":
+elif chart_type_stock == "Candlestick":
     fig_candlestick = go.Figure(data=[go.Candlestick(x=stock_quote['Date'],
-                                                     open=stock_quote['Open'], high=stock_quote['High'],
-                                                     low=stock_quote['Low'], close=stock_quote['Close'])])
+                                                    open=stock_quote['Open'], high=stock_quote['High'],
+                                                    low=stock_quote['Low'], close=stock_quote['Close'])])
     fig_candlestick.update_layout(xaxis_rangeslider_visible=False)
     st.plotly_chart(fig_candlestick)
 
@@ -129,12 +159,44 @@ if data_details is not None and not data_details.empty:
 # Display option data based on selected display mode
 if not combined_data.empty:
     combined_data['Date'] = pd.to_datetime(combined_data[DataType.DATE])  # Ensuring 'Date' is in datetime format
+    
     if display_mode == 'Chart':
+
+        opt_button_col1, opt_button_col2, opt_button_col3 = st.columns(3)
+
+        with opt_button_col1:
+            if st.button('Line', key='line_option'):
+                st.session_state.chart_data_type_option = 'Line'
+
+        with opt_button_col2:
+            if st.button('Scatter', key='scatter_option'):
+                st.session_state.chart_data_type_option = 'Scatter'
+
+        with opt_button_col3:
+            if st.button('Candlestick', key='candlestick_option'):
+                st.session_state.chart_data_type_option = 'Candlestick'
+
+        chart_type_option = st.session_state.chart_data_type_option
+
         # Pivot the combined data for charting
         data_type = DataType.CLOSE if st.session_state.chart_data_type == 'Price' else DataType.VOLUME
         chart_data = combined_data.pivot_table(index='Date', columns='Expiration', values=data_type)
         st.write(f"Option {st.session_state.chart_data_type} Chart")
-        st.line_chart(chart_data)
+
+        if chart_type_option == "Line":
+            st.line_chart(chart_data)
+        elif chart_type_option == "Scatter":
+            #fig_scatter_option = go.Figure(data=[go.Scatter(x=chart_data['DataType.Date'], y=chart_data[DataType.CLOSE], mode='markers')])
+            #st.plotly_chart(fig_scatter_option)
+            st.scatter_chart(chart_data)
+        elif chart_type_option == "Candlestick":
+            fig_candlestick_option = go.Figure(data=[go.Candlestick(x=data_details[DataType.DATE],
+                                                            open=data_details[DataType.OPEN], high=data_details[DataType.HIGH],
+                                                            low=data_details[DataType.LOW], close=data_details[DataType.CLOSE])])
+            fig_candlestick_option.update_layout(xaxis_rangeslider_visible=False)
+            st.plotly_chart(fig_candlestick_option)
+
+      
     elif display_mode == 'Table':
         # Show data in a table format
         st.write("Option Data Table")
