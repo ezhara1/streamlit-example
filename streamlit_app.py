@@ -70,7 +70,7 @@ try:
             right=[OptionRight.CALL if option_type == "CALL" else OptionRight.PUT],
             date_range=DateRange(start_date, end_date)
         )
-except NoData:
+except NoData or ValueError:
     st.write("No data available for the selected options.")
     data_details = None
     expiration = None
