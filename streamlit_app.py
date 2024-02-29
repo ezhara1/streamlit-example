@@ -24,6 +24,9 @@ if 'chart_data_type_option' not in st.session_state:
 if 'chart_data_type' not in st.session_state:
     st.session_state['chart_data_type'] = 'Price'
 
+options = ["PUT", "CALL"]
+option_type = st.sidebar.selectbox("Select Symbol", options)
+
 # Sidebar: Symbol Selection
 with client.connect():
     symbols = client.get_roots(SecType.OPTION)
@@ -64,7 +67,7 @@ try:
             root=symbol,
             exp=expiration,
             strike=strike,
-            right=OptionRight.CALL,
+            right=OptionRight[OptionRight.CALL if option_type == "CALL" else OptionRight.PUT],
             date_range=DateRange(start_date, end_date)
         )
 except NoData:
@@ -156,6 +159,8 @@ combined_data = pd.DataFrame()
 if data_details is not None and not data_details.empty:
     combined_data = pd.concat([data_details, secondary_data_details]) if secondary_data_details is not None else data_details
 
+
+st.write(f"Option {st.session_state.chart_data_type} Chart")
 # Display option data based on selected display mode
 if not combined_data.empty:
     combined_data['Date'] = pd.to_datetime(combined_data[DataType.DATE])  # Ensuring 'Date' is in datetime format
@@ -181,7 +186,7 @@ if not combined_data.empty:
         # Pivot the combined data for charting
         data_type = DataType.CLOSE if st.session_state.chart_data_type == 'Price' else DataType.VOLUME
         chart_data = combined_data.pivot_table(index='Date', columns='Expiration', values=data_type)
-        st.write(f"Option {st.session_state.chart_data_type} Chart")
+        
 
         if chart_type_option == "Line":
             st.line_chart(chart_data)
