@@ -25,7 +25,7 @@ if 'chart_data_type' not in st.session_state:
     st.session_state['chart_data_type'] = 'Price'
 
 options = ["PUT", "CALL"]
-option_type = st.sidebar.selectbox("Select Symbol", options)
+option_type = st.sidebar.selectbox("Select Option Type", options)
 
 # Sidebar: Symbol Selection
 with client.connect():
@@ -67,7 +67,7 @@ try:
             root=symbol,
             exp=expiration,
             strike=strike,
-            right=OptionRight[OptionRight.CALL if option_type == "CALL" else OptionRight.PUT],
+            right=[OptionRight.CALL if option_type == "CALL" else OptionRight.PUT],
             date_range=DateRange(start_date, end_date)
         )
 except NoData:
@@ -90,7 +90,7 @@ if secondary_expiration:
                 root=symbol,
                 exp=secondary_expiration,
                 strike=strike,
-                right=OptionRight.CALL,
+                right=[OptionRight.CALL if option_type == "CALL" else OptionRight.PUT],
                 date_range=DateRange(start_date, end_date)
             )
     except NoData:
