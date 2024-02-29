@@ -24,14 +24,14 @@ if 'chart_data_type_option' not in st.session_state:
 if 'chart_data_type' not in st.session_state:
     st.session_state['chart_data_type'] = 'Price'
 
-options = ["PUT", "CALL"]
-option_type = st.sidebar.selectbox("Select Option Type", options)
 
 # Sidebar: Symbol Selection
 with client.connect():
     symbols = client.get_roots(SecType.OPTION)
 symbol = st.sidebar.selectbox("Select Symbol", symbols)
 
+options = ["PUT", "CALL"]
+option_type = st.sidebar.selectbox("Select Option Type", options)
 
 
 # Sidebar: Expiration Date Selection based on selected Symbol
