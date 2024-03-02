@@ -201,6 +201,15 @@ if not combined_data.empty:
             fig_candlestick_option.update_layout(xaxis_rangeslider_visible=False)
             st.plotly_chart(fig_candlestick_option)
 
+        if display_mode == 'Chart':
+            col1, col2 = st.columns([1, 1])
+            with col1:
+                if st.button('Price', key='price'):
+                    set_chart_type('Price')
+            with col2:
+                if st.button('Volume', key='volume'):
+                    set_chart_type('Volume')
+
       
     elif display_mode == 'Table':
         # Show data in a table format
