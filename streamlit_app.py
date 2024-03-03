@@ -90,7 +90,7 @@ if secondary_expiration:
                 root=symbol,
                 exp=secondary_expiration,
                 strike=strike,
-                right=[OptionRight.CALL if option_type == "CALL" else OptionRight.PUT],
+                right=OptionRight.CALL if option_type == "CALL" else OptionRight.PUT,
                 date_range=DateRange(start_date, end_date)
             )
     except NoData:
